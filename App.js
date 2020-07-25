@@ -1,16 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Button,
-  TouchableWithoutFeedback,
-  TouchableOpacity,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+
+import DateDisplay from "./components/DatesDisplay";
+import GestacionalAgeMenu from "./components/GestacionalAgeMenu";
+import InputDateContainer from "./components/InputDatesContainer";
 
 export default function App() {
   const FUR = "FUR";
@@ -23,6 +17,7 @@ export default function App() {
   const [method, setMethod] = useState(FUR);
 
   const [furDate, setFurDate] = useState(false);
+  const [furOperacionalDate, setFurOperacionalDate] = useState(false);
 
   const [ecoDate, setEcoDate] = useState(false);
   const [ecoWeeks, setEcoWeeks] = useState(0);
@@ -30,9 +25,9 @@ export default function App() {
 
   const [pickDate, setPickDate] = useState(new Date());
   const [gestacionalAge, setGestacionalAge] = useState("--");
-  const [dueDate, setDueDate] = useState("--/--/--");
-  const [preNatalDate, setPreNatalDate] = useState(false);
-  const [fifthMonthDate, setFithMonthDate] = useState(false);
+  const [dueDate, setDueDate] = useState();
+  const [preNatalDate, setPreNatalDate] = useState();
+  const [fifthMonthDate, setFithMonthDate] = useState();
 
   const [weeks, setWeeks] = useState(0);
   const [days, setDays] = useState(0);
@@ -41,8 +36,6 @@ export default function App() {
   const [show, setShow] = useState(false);
   const [value, setValue] = useState(false);
   const [modifyDate, setModifyDate] = useState("");
-
-  const icon = <FontAwesome5 name={"calendar"} size={16} />;
 
   const changeMethodFUR = () => {
     resetDate();
@@ -91,19 +84,11 @@ export default function App() {
     showMode("date");
   };
 
-  function getFurDate() {
-    return furDate ? formatDate(furDate) : "--/--/--";
-  }
-
-  function getEcoDate() {
-    return ecoDate ? formatDate(ecoDate) : "--/--/--";
-  }
-
   const calculateDates = (referenceDate) => {
     if (referenceDate) {
-      var newDueDate = new Date(referenceDate);
-      var newPrenatalDate = new Date(referenceDate);
-      var newFifthMonthDate = new Date(referenceDate);
+      const newDueDate = new Date(referenceDate);
+      const newPrenatalDate = new Date(referenceDate);
+      const newFifthMonthDate = new Date(referenceDate);
 
       newDueDate.setDate(newDueDate.getDate() + DAYS_TO_DUE_DATE);
       newPrenatalDate.setDate(newPrenatalDate.getDate() + DAYS_TO_PRE_NATAL);
@@ -111,18 +96,19 @@ export default function App() {
         newFifthMonthDate.getDate() + DAYS_TO_FIFTH_MONTH
       );
 
-      setDueDate(formatDate(newDueDate));
-      setPreNatalDate(formatDate(newPrenatalDate));
-      setFithMonthDate(formatDate(newFifthMonthDate));
+      setDueDate(newDueDate.toString());
+      setPreNatalDate(newPrenatalDate.toString());
+      setFithMonthDate(newFifthMonthDate.toString());
     } else {
-      setDueDate("--/--/--");
-      setPreNatalDate("--/--/--");
-      setFithMonthDate("--/--/--");
+      setDueDate(false);
+      setPreNatalDate(false);
+      setFithMonthDate(false);
     }
   };
 
-  function resetDate() {
+  resetDate = () => {
     setFurDate(false);
+    setFurOperacionalDate(false);
     setEcoDate(false);
     setPickDate(new Date());
     setWeeks(0);
@@ -130,10 +116,10 @@ export default function App() {
     setEcoWeeks(0);
     setEcoDays(0);
     setGestacionalAge("--");
-    setDueDate("--/--/--");
-    setPreNatalDate("--/--/--");
-    setFithMonthDate("--/--/--");
-  }
+    setDueDate(false);
+    setPreNatalDate(false);
+    setFithMonthDate(false);
+  };
 
   const calculateFurDate = () => {
     gestationalAgeInWeeks(furDate);
@@ -141,7 +127,7 @@ export default function App() {
   };
 
   const calculateFurOperationalDate = () => {
-    var furOperacionalDate = false;
+    let furOperacionalDate = false;
 
     if (ecoDate && !isNaN(ecoWeeks) && !isNaN(ecoDays)) {
       furOperacionalDate = new Date(ecoDate);
@@ -151,15 +137,17 @@ export default function App() {
 
     gestationalAgeInWeeks(furOperacionalDate);
     calculateDates(furOperacionalDate);
+
+    setFurOperacionalDate(furOperacionalDate.toString());
   };
 
   const gestationalAgeInWeeks = (referenceDate) => {
     if (referenceDate) {
-      var diffDate = Math.abs(referenceDate - pickDate);
-      var diffDays = Math.ceil(diffDate / (1000 * 60 * 60 * 24));
+      const diffDate = Math.abs(referenceDate - pickDate);
+      const diffDays = Math.ceil(diffDate / (1000 * 60 * 60 * 24));
 
-      var numberWeeks = Math.trunc(diffDays / 7);
-      var weeksInDays = numberWeeks * 7;
+      const numberWeeks = Math.trunc(diffDays / 7);
+      const weeksInDays = numberWeeks * 7;
 
       setWeeks(numberWeeks);
       setDays(diffDays - weeksInDays);
@@ -169,7 +157,7 @@ export default function App() {
   };
 
   const calculateGestacionalAge = (weeks, days) => {
-    var gestacionalDate = "";
+    let gestacionalDate = "";
 
     if (weeks !== 0) {
       if (weeks === 1) {
@@ -194,57 +182,15 @@ export default function App() {
     }
   };
 
-  function formatDate(date) {
-    if (date) {
-      var day = date.getDate();
-      var month = date.getMonth() + 1;
-      var year = date.getFullYear();
-
-      var pad = "00";
-      const monthFormat =
-        pad.substring(0, pad.length - month.toString().length) + month;
-      const dayFormat =
-        pad.substring(0, pad.length - day.toString().length) + day;
-
-      return dayFormat + "/" + monthFormat + "/" + year;
-    }
-
-    return "";
-  }
-
   return (
     <View style={styles.container}>
-      <View style={styles.navContainer}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.titleText}>Edad Gestacional</Text>
-        </View>
-        {method === FUR ? (
-          <View style={styles.subtitleContainer}>
-            <TouchableWithoutFeedback onPress={changeMethodFUR}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.subtitleTextSelected}>FUR</Text>
-                <Text style={{ height: 6, backgroundColor: "#FCD3C8" }}>c</Text>
-              </View>
-            </TouchableWithoutFeedback>
+      <GestacionalAgeMenu
+        method={method}
+        FUR={FUR}
+        changeMethodFUR={changeMethodFUR}
+        changeMethodFUROPERACIONAL={changeMethodFUROPERACIONAL}
+      />
 
-            <TouchableWithoutFeedback onPress={changeMethodFUROPERACIONAL}>
-              <Text style={styles.subtitleText}>FUR Operacional</Text>
-            </TouchableWithoutFeedback>
-          </View>
-        ) : (
-          <View style={styles.subtitleContainer}>
-            <TouchableWithoutFeedback onPress={changeMethodFUR}>
-              <Text style={styles.subtitleText}>FUR</Text>
-            </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback onPress={changeMethodFUROPERACIONAL}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.subtitleTextSelected}>FUR Operacional</Text>
-                <Text style={{ height: 6, backgroundColor: "#FCD3C8" }}>c</Text>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        )}
-      </View>
       <View
         style={{
           flex: 80,
@@ -254,92 +200,23 @@ export default function App() {
       >
         <StatusBar style="light" />
 
-        {method === FUR ? (
-          <TouchableWithoutFeedback onPress={showFurDatepicker}>
-            <View style={styles.containerInputText}>
-              <Text styles={styles.titleInputText}>FUR</Text>
-              <View flexDirection="row">
-                <View flex={9}>
-                  {furDate ? (
-                    <Text style={styles.inputText}>{getFurDate()}</Text>
-                  ) : (
-                    <Text style={styles.placeholderInput}>Ingrese fecha</Text>
-                  )}
-                </View>
-                <View flex={1}>
-                  <Text style={styles.inputTextIcon}>{icon}</Text>
-                </View>
-              </View>
-            </View>
-          </TouchableWithoutFeedback>
-        ) : null}
-
-        {method === FUR_OPERACIONAL ? (
-          <React.Fragment>
-            <TouchableWithoutFeedback onPress={showEcoDatepicker}>
-              <View style={styles.containerInputText}>
-                <Text styles={styles.titleInputText}>Fecha Ecografía</Text>
-                <View flexDirection="row">
-                  <View flex={9}>
-                    {ecoDate ? (
-                      <Text style={styles.inputText}>{getEcoDate()}</Text>
-                    ) : (
-                      <Text style={styles.placeholderInput}>Ingrese fecha</Text>
-                    )}
-                  </View>
-                  <View flex={1}>
-                    <Text style={styles.inputTextIcon}>{icon}</Text>
-                  </View>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "flex-start",
-                width: "80%",
-                marginTop: 20,
-              }}
-            >
-              <View flex={1}>
-                <Text styles={styles.titleInputText}>Semanas</Text>
-                <TextInput
-                  style={styles.inputText}
-                  onChangeText={(text) => setEcoWeeks(text)}
-                  keyboardType="numeric"
-                  placeholder="N° semanas"
-                  placeholderTextColor="#9B9B9B"
-                ></TextInput>
-              </View>
-              <View flex={1}>
-                <Text styles={styles.titleInputText}>Dias</Text>
-                <TextInput
-                  ref={this.ecoDaysInput}
-                  style={styles.inputText}
-                  onChangeText={(text) => setEcoDays(text)}
-                  keyboardType="numeric"
-                  placeholder="N° días"
-                  placeholderTextColor="#9B9B9B"
-                ></TextInput>
-              </View>
-            </View>
-          </React.Fragment>
-        ) : null}
-
-        <TouchableWithoutFeedback onPress={showPickDatepicker}>
-          <View style={styles.containerInputText}>
-            <Text styles={styles.titleInputText}>Fecha</Text>
-            <View style={{ flexDirection: "row" }}>
-              <View style={{ flex: 9 }}>
-                <Text style={styles.inputText}>{formatDate(pickDate)}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputTextIcon}>{icon}</Text>
-              </View>
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
+        <InputDateContainer
+          method={method}
+          FUR={FUR}
+          FUR_OPERACIONAL={FUR_OPERACIONAL}
+          furDate={furDate}
+          showFurDatepicker={showFurDatepicker}
+          ecoDate={ecoDate}
+          showEcoDatepicker={showEcoDatepicker}
+          setEcoDays={setEcoDays}
+          setEcoWeeks={setEcoWeeks}
+          pickDate={pickDate}
+          showPickDatepicker={showPickDatepicker}
+          value={value}
+          mode={mode}
+          onChange={onChange}
+          show={show}
+        />
 
         <View style={styles.buttonContainer}>
           {method === FUR ? (
@@ -362,41 +239,15 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ marginTop: 20 }}>
-          <View style={{ alignItems: "center" }}>
-            <Text style={styles.inputText}>{gestacionalAge}</Text>
-            <Text style={{ color: "#9B9B9B" }}>Edad Gestacional</Text>
-          </View>
-        </View>
-
-        <View style={{ flexDirection: "row", marginTop: 20 }}>
-          <View style={{ alignItems: "center", flex: 1 }}>
-            <Text style={styles.inputText}>{preNatalDate}</Text>
-            <Text style={{ color: "#9B9B9B" }}>Licencia Prenatal</Text>
-          </View>
-          <View style={{ alignItems: "center", flex: 1 }}>
-            <Text style={styles.inputText}>{fifthMonthDate}</Text>
-            <Text style={{ color: "#9B9B9B" }}>Quinto Mes</Text>
-          </View>
-        </View>
-        <View style={{ marginTop: 20 }}>
-          <View style={{ alignItems: "center", flex: 1 }}>
-            <Text style={styles.inputText}>{dueDate}</Text>
-            <Text style={{ color: "#9B9B9B" }}>Parto</Text>
-          </View>
-        </View>
-
-        {show && (
-          <DateTimePicker
-            testID="dateTimePickerFurDate"
-            value={value}
-            mode={mode}
-            is24Hour={true}
-            display="default"
-            onChange={onChange}
-            style={{ backgroundColor: "red" }}
-          />
-        )}
+        <DateDisplay
+          gestacionalAge={gestacionalAge}
+          preNatalDate={preNatalDate}
+          fifthMonthDate={fifthMonthDate}
+          dueDate={dueDate}
+          furOperacionalDate={furOperacionalDate}
+          method={method}
+          FUR_OPERACIONAL={FUR_OPERACIONAL}
+        />
       </View>
     </View>
   );
@@ -408,63 +259,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-  },
-  navContainer: {
-    backgroundColor: "#534658",
-    width: "100%",
-    flex: 20,
-  },
-  titleContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 2,
-  },
-  titleText: {
-    color: "white",
-    fontSize: 24,
-  },
-  subtitleContainer: {
-    flexDirection: "row",
-    flex: 1,
-  },
-  subtitleTextSelected: {
-    alignSelf: "center",
-    color: "white",
-    fontSize: 18,
-    flex: 1,
-    textAlign: "center",
-  },
-  subtitleText: {
-    color: "white",
-    fontSize: 18,
-    flex: 1,
-    textAlign: "center",
-    opacity: 0.8,
-  },
-  containerInputText: {
-    borderBottomColor: "#f0cfc8",
-    borderBottomWidth: 2,
-    width: "80%",
-    height: 55,
-    marginTop: 15,
-  },
-  titleInputText: {
-    marginTop: 20,
-    marginBottom: 0,
-  },
-  inputText: {
-    fontSize: 20,
-    marginLeft: 5,
-  },
-  inputTextIcon: {
-    marginTop: 6,
-    marginLeft: 5,
-    color: "#9B9B9B",
-  },
-  placeholderInput: {
-    fontSize: 20,
-    color: "#9B9B9B",
-    marginLeft: 5,
   },
   buttonContainer: {
     flexDirection: "row",
