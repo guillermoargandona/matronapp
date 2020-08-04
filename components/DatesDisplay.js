@@ -1,11 +1,12 @@
 import React from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { ScrollView, StyleSheet, View, Text } from "react-native";
 
 import { formatDate } from "../services/DateFormat";
 
 const datesDisplay = (props) => {
   return (
     <React.Fragment>
+      <ScrollView>
       {props.method === props.FUR_OPERACIONAL ? (
         <View style={{ flexDirection: "row" }}>
           <View style={styles.dateWrapper}>
@@ -42,6 +43,7 @@ const datesDisplay = (props) => {
           <Text style={styles.dateColor}>Parto</Text>
         </View>
       </View>
+      </ScrollView>
     </React.Fragment>
   );
 };
@@ -52,8 +54,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   dateWrapper: {
+    flexGrow: 1,
     alignItems: "center",
-    flex: 1,
+    width: "50%"
   },
   dateColor: {
     color: "#9B9B9B",
